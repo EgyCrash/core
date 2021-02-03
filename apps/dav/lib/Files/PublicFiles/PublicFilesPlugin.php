@@ -148,6 +148,25 @@ class PublicFilesPlugin extends ServerPlugin {
 				return $node->getNode()->getSize();
 			});
 		}
+		$server = $this->server;
+		$propFind->handle(FilesPlugin::DOWNLOADURL_PROPERTYNAME, static function () use ($node, $server) {
+			$path = $server->getBaseUri() . $server->getRequestUri();
+			$nodeName = $node->getName();
+			if (\substr($path, -\strlen($nodeName)) !== $nodeName) {
+				$path .= '/' . $nodeName;
+			}
+
+			$share = $node->getShare();
+			if ($share->getPassword() === null) {
+				return $path;
+			}
+
+			$validUntil = new \DateTime();
+			$validUntil->add(new \DateInterval("PT30M")); // valid for 30 minutes
+			$key = \hash_hkdf('sha256', $share->getPassword());
+			$s = new PublicShareSigner($share->getToken(), $node->getName(), $validUntil, $key);
+			return $path . '?signature=' . $s->getSignature() . '&expires=' . \urlencode($validUntil->format(\DateTime::ATOM));
+		});
 	}
 
 	/**
