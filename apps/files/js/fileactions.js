@@ -654,7 +654,7 @@
 				permissions: OC.PERMISSION_UPDATE,
 				iconClass: 'icon-rename',
 				actionHandler: function (filename, context) {
-					context.fileList.rename(filename);
+					context.fileList.rename(filename, context.fileInfoModel.id);
 				}
 			});
 

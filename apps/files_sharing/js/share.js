@@ -167,8 +167,8 @@
 				permissions: OC.PERMISSION_ALL,
 				iconClass: 'icon-shared',
 				type: OCA.Files.FileActions.TYPE_INLINE,
-				actionHandler: function(fileName) {
-					fileList.showDetailsView(fileName, 'shareTabView');
+				actionHandler: function(fileName, context) {
+					fileList.showDetailsView(fileName, 'shareTabView', context.fileInfoModel.id);
 				},
 				render: function(actionSpec, isDefault, context) {
 					var permissions = parseInt(context.$file.attr('data-permissions'), 10);
@@ -186,6 +186,9 @@
 			shareTab.on('sharesChanged', function(shareModel) {
 				var fileInfoModel = shareModel.fileInfoModel;
 				var $tr = fileList.findFileEl(fileInfoModel.get('name'));
+				if ($tr.length > 1 && shareModel.fileInfoModel) {
+					$tr = $tr.filter('[data-id="' + shareModel.fileInfoModel.id + '"]');
+				}
 				OCA.Sharing.Util._updateFileListDataAttributes(fileList, $tr, shareModel);
 				if (!OCA.Sharing.Util._updateFileActionIcon($tr, shareModel.hasUserShares(), shareModel.hasLinkShare())) {
 					// remove icon, if applicable

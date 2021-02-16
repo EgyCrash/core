@@ -170,7 +170,7 @@
 			this._sharedWithUser = !!state;
 		},
 
-		_updateDetailsView: function(fileName, show) {
+		_updateDetailsView: function(fileName, show, fileId) {
 			// prevent opening details sidebar for pending shares
 			if (this._sharedWithUser) {
 				var $tr = this.findFileEl(fileName);
@@ -180,7 +180,7 @@
 				}
 			}
 
-			return OCA.Files.FileList.prototype._updateDetailsView.call(this, fileName, show);
+			return OCA.Files.FileList.prototype._updateDetailsView.call(this, fileName, show, fileId);
 		},
 
 		updateEmptyContent: function() {

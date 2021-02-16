@@ -421,7 +421,7 @@
 					iconClass: 'icon-details',
 					permissions: OC.PERMISSION_READ,
 					actionHandler: function(fileName, context) {
-						self._updateDetailsView(fileName);
+						self._updateDetailsView(fileName, undefined, context.fileInfoModel.id);
 					}
 				});
 			}
@@ -435,9 +435,10 @@
 		 * Returns a unique model for the given file name.
 		 *
 		 * @param {string|object} fileName file name or jquery row
+		 * @param {number} fileId id of the file
 		 * @return {OCA.Files.FileInfoModel} file info model
 		 */
-		getModelForFile: function(fileName) {
+		getModelForFile: function(fileName, fileId) {
 			var self = this;
 			var $tr;
 			// jQuery object ?
@@ -453,7 +454,7 @@
 			}
 
 			// if requesting the selected model, return it
-			if (this._currentFileModel && this._currentFileModel.get('name') === fileName) {
+			if (this._currentFileModel && this._currentFileModel.get('name') === fileName && (!fileId || fileId === this._currentFileModel.get('id'))) {
 				return this._currentFileModel;
 			}
 
@@ -497,12 +498,13 @@
 		 *
 		 * @param {string} fileName file name for which to show details
 		 * @param {string} [tabId] optional tab id to select
+		 * @param {number} fileId id of the file
 		 */
-		showDetailsView: function(fileName, tabId) {
+		showDetailsView: function(fileName, tabId, fileId) {
 			if (!this._detailsView) {
 				return;
 			}
-			this._updateDetailsView(fileName, true);
+			this._updateDetailsView(fileName, true, fileId);
 			if (tabId) {
 				this._detailsView.selectTab(tabId);
 			}
@@ -513,8 +515,9 @@
 		 *
 		 * @param {string} fileName file name from the current list
 		 * @param {boolean} [show=true] whether to open the sidebar if it was closed
+		 * @param {number} fileId id of the file
 		 */
-		_updateDetailsView: function(fileName, show) {
+		_updateDetailsView: function(fileName, show, fileId) {
 			if (!this._detailsView) {
 				return;
 			}
@@ -545,8 +548,12 @@
 			}
 
 			var $tr = this.findFileEl(fileName);
-			var model = this.getModelForFile($tr);
 
+			if ($tr.length > 1 && fileId) {
+				$tr = $tr.filter('[data-id="' + fileId + '"]');
+			}
+
+			var model = this.getModelForFile($tr, fileId);
 			this._currentFileModel = model;
 
 			$tr.addClass('highlighted');
@@ -620,6 +627,7 @@
 				this._selectionSummary.remove(data);
 			}
 			if (this._detailsView && !this._detailsView.$el.hasClass('disappear')) {
+
 				// hide sidebar
 				this._updateDetailsView(null);
 			}
@@ -702,7 +710,7 @@
 						$(event.target).closest('a').blur();
 					}
 				} else {
-					this._updateDetailsView($tr.attr('data-file'));
+					this._updateDetailsView($tr.attr('data-file'), undefined, $tr.attr('data-id'));
 					event.preventDefault();
 				}
 			}
@@ -2272,11 +2280,15 @@
 		 * If the user enters a new name, the file will be renamed.
 		 *
 		 * @param oldName file name of the file to rename
+		 * @param {number} fileId id of the file
 		 */
-		rename: function(oldName) {
+		rename: function(oldName, fileId) {
 			var self = this;
 			var tr, td, input, form;
 			tr = this.findFileEl(oldName);
+			if (tr.length > 1 && fileId) {
+				tr = tr.filter('[data-id="' + fileId + '"]');
+			}
 			var oldFileInfo = this.files[tr.index()];
 			tr.data('renaming',true);
 			td = tr.children('td.filename');
@@ -2315,7 +2327,7 @@
 			function updateInList(newFileInfo, oldFileInfo) {
 				self.updateRow(tr, newFileInfo);
 				self.fileSummary.updateHidden(newFileInfo, oldFileInfo);
-				self._updateDetailsView(newFileInfo.name, false);
+				self._updateDetailsView(newFileInfo.name, false, newFileInfo.id);
 			}
 
 			// TODO: too many nested blocks, move parts into functions
